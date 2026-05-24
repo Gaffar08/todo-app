@@ -1,0 +1,25 @@
+const express = require("express");
+const cors = require("cors");
+const todosRouter = require("./routes/todos");
+require("dotenv").config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use("/api/todos", todosRouter);
+app.get("/", (req, res) => {
+  res.send("Backend API Running");
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "UP"
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: backend-config
+  namespace: todo-app
+
+data:
+  AWS_REGION: ap-south-1
+  TABLE_NAME: todos
+  PORT: "5000"
