@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  docker: circleci/docker@2.4.0
-
 jobs:
 
   backend-build-and-push:
@@ -22,14 +19,14 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y wget apt-transport-https gnupg lsb-release
             wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
             sudo apt-get update
             sudo apt-get install -y trivy
 
       - run:
-          name: Scan Backend Image
+          name: Scan Backend Docker Image
           command: |
-            trivy image gaffar08/backend:latest
+            trivy image gaffar08/todo-backend:latest
 
       - run:
           name: DockerHub Login
@@ -37,7 +34,7 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Push Backend Image
+          name: Push Backend Docker Image
           command: |
             docker push gaffar08/todo-backend:latest
 
@@ -58,12 +55,12 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y wget apt-transport-https gnupg lsb-release
             wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
             sudo apt-get update
             sudo apt-get install -y trivy
 
       - run:
-          name: Scan Frontend Image
+          name: Scan Frontend Docker Image
           command: |
             trivy image gaffar08/todo-frontend:latest
 
@@ -73,14 +70,14 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Push Frontend Image
+          name: Push Frontend Docker Image
           command: |
-            docker push gaffar08/frontend:latest
+            docker push gaffar08/todo-frontend:latest
 
 workflows:
   version: 2
 
-  build-test-push:
+  build-and-push:
     jobs:
       - backend-build-and-push
       - frontend-build-and-push
