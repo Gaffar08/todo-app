@@ -2,6 +2,28 @@ version: 2.1
 
 jobs:
 
+  owasp-scan:
+    docker:
+      - image: cimg/openjdk:17.0
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install OWASP Dependency Check
+          command: |
+            wget https://github.com/dependency-check/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
+
+            unzip dependency-check-9.0.9-release.zip
+
+      - run:
+          name: Run OWASP Dependency Check
+          command: |
+            ./dependency-check/bin/dependency-check.sh \
+            --scan . \
+            --format HTML \
+            --out reports
+
   backend-build-and-push:
     machine: true
 
@@ -9,29 +31,22 @@ jobs:
       - checkout
 
       - run:
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      - run:
           name: Build Backend Docker Image
           command: |
             docker build -t gaffar08/todo-backend:latest ./backend
 
       - run:
-          name: Install Trivy
+          name: Trivy Backend Scan
           command: |
-            sudo apt-get update
-            sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-            sudo apt-get update
-            sudo apt-get install -y trivy
-
-      - run:
-          name: Scan Backend Docker Image
-          command: |
-            trivy image gaffar08/todo-backend:latest
-
-      - run:
-          name: DockerHub Login
-          command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy image \
+            gaffar08/todo-backend:latest
 
       - run:
           name: Push Backend Docker Image
@@ -45,29 +60,22 @@ jobs:
       - checkout
 
       - run:
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      - run:
           name: Build Frontend Docker Image
           command: |
             docker build -t gaffar08/todo-frontend:latest ./frontend
 
       - run:
-          name: Install Trivy
+          name: Trivy Frontend Scan
           command: |
-            sudo apt-get update
-            sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-            sudo apt-get update
-            sudo apt-get install -y trivy
-
-      - run:
-          name: Scan Frontend Docker Image
-          command: |
-            trivy image gaffar08/todo-frontend:latest
-
-      - run:
-          name: DockerHub Login
-          command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy image \
+            gaffar08/todo-frontend:latest
 
       - run:
           name: Push Frontend Docker Image
@@ -79,5 +87,12 @@ workflows:
 
   build-and-push:
     jobs:
-      - backend-build-and-push
-      - frontend-build-and-push
+      - owasp-scan
+
+      - backend-build-and-push:
+          requires:
+            - owasp-scan
+
+      - frontend-build-and-push:
+          requires:
+            - owasp-scan
