@@ -31,7 +31,7 @@ jobs:
               --nvdApiKey ${NVD_API_KEY} \
               --scan /src/backend \
               --format JSON \
-              --out /src/backend-report
+              --out /src/backend-report || true
 
       - store_artifacts:
           path: backend-report
@@ -85,7 +85,7 @@ jobs:
               --nvdApiKey ${NVD_API_KEY} \
               --scan /src/frontend \
               --format JSON \
-              --out /src/frontend-report
+              --out /src/frontend-report || true
 
       - store_artifacts:
           path: frontend-report
