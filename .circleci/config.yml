@@ -22,13 +22,15 @@ jobs:
       - run:
           name: OWASP Dependency Check Backend
           command: |
+            mkdir -p backend-report
+
             docker run --rm \
               -e NVD_API_KEY=${NVD_API_KEY} \
               -v $(pwd):/src \
               owasp/dependency-check:latest \
               --nvdApiKey ${NVD_API_KEY} \
               --scan /src/backend \
-              --format HTML \
+              --format JSON \
               --out /src/backend-report
 
       - store_artifacts:
@@ -74,13 +76,15 @@ jobs:
       - run:
           name: OWASP Dependency Check Frontend
           command: |
+            mkdir -p frontend-report
+
             docker run --rm \
               -e NVD_API_KEY=${NVD_API_KEY} \
               -v $(pwd):/src \
               owasp/dependency-check:latest \
               --nvdApiKey ${NVD_API_KEY} \
               --scan /src/frontend \
-              --format HTML \
+              --format JSON \
               --out /src/frontend-report
 
       - store_artifacts:
