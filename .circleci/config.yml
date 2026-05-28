@@ -60,9 +60,9 @@ jobs:
       - checkout
 
       - run:
-          name: Docker Login
-          command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    name: DockerHub Login
+    command: |
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
           name: Build Frontend Docker Image
