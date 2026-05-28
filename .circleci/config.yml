@@ -14,23 +14,16 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Install Java
-          command: |
-            sudo apt update
-            sudo apt install -y default-jre unzip wget
-
-      - run:
           name: OWASP Dependency Check Backend
           command: |
-            wget https://github.com/dependency-check/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
-
-            unzip dependency-check-9.0.9-release.zip
-
-            ./dependency-check/bin/dependency-check.sh \
-            --project "todo-backend" \
-            --scan backend \
-            --format HTML \
-            --out backend-report
+            docker run --rm \
+              -e NVD_API_KEY=${NVD_API_KEY} \
+              -v $(pwd):/src \
+              owasp/dependency-check:latest \
+              --nvdApiKey ${NVD_API_KEY} \
+              --scan /src/backend \
+              --format HTML \
+              --out /src/backend-report
 
       - store_artifacts:
           path: backend-report
@@ -44,14 +37,15 @@ jobs:
           name: Trivy Backend Scan
           command: |
             docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-backend:latest
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image \
+              gaffar08/todo-backend:latest
 
       - run:
           name: Push Backend Docker Image
           command: |
             docker push gaffar08/todo-backend:latest
+
 
   frontend-build-and-push:
     machine: true
@@ -65,23 +59,16 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Install Java
-          command: |
-            sudo apt update
-            sudo apt install -y default-jre unzip wget
-
-      - run:
           name: OWASP Dependency Check Frontend
           command: |
-            wget https://github.com/dependency-check/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
-
-            unzip dependency-check-9.0.9-release.zip
-
-            ./dependency-check/bin/dependency-check.sh \
-            --project "todo-frontend" \
-            --scan frontend \
-            --format HTML \
-            --out frontend-report
+            docker run --rm \
+              -e NVD_API_KEY=${NVD_API_KEY} \
+              -v $(pwd):/src \
+              owasp/dependency-check:latest \
+              --nvdApiKey ${NVD_API_KEY} \
+              --scan /src/frontend \
+              --format HTML \
+              --out /src/frontend-report
 
       - store_artifacts:
           path: frontend-report
@@ -95,14 +82,15 @@ jobs:
           name: Trivy Frontend Scan
           command: |
             docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-frontend:latest
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image \
+              gaffar08/todo-frontend:latest
 
       - run:
           name: Push Frontend Docker Image
           command: |
             docker push gaffar08/todo-frontend:latest
+
 
 workflows:
   version: 2
