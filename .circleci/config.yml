@@ -1,34 +1,14 @@
 version: 2.1
 
 jobs:
-
-  owasp-scan:
+  frontend-build-and-push:
     docker:
-      - image: cimg/openjdk:17.0
+      - image: cimg/base:stable
 
     steps:
       - checkout
 
-      - run:
-          name: Install OWASP Dependency Check
-          command: |
-            wget https://github.com/dependency-check/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip
-
-            unzip dependency-check-9.0.9-release.zip
-
-      - run:
-          name: Run OWASP Dependency Check
-          command: |
-            ./dependency-check/bin/dependency-check.sh \
-            --scan . \
-            --format HTML \
-            --out reports
-
-  backend-build-and-push:
-    machine: true
-
-    steps:
-      - checkout
+      - setup_remote_docker
 
       - run:
           name: Docker Login
@@ -36,63 +16,17 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - run:
-          name: Build Backend Docker Image
+          name: Build Frontend Image
           command: |
-            docker build -t gaffar08/todo-backend:latest ./backend
+            docker build -t gaffar08/todo-frontend ./frontend
 
       - run:
-          name: Trivy Backend Scan
+          name: Push Frontend Image
           command: |
-            docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-backend:latest
-
-      - run:
-          name: Push Backend Docker Image
-          command: |
-            docker push gaffar08/todo-backend:latest
-
-  frontend-build-and-push:
-    machine: true
-
-    steps:
-      - checkout
-
-      - run:
-    name: DockerHub Login
-    command: |
-      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
-      - run:
-          name: Build Frontend Docker Image
-          command: |
-            docker build -t gaffar08/todo-frontend:latest ./frontend
-
-      - run:
-          name: Trivy Frontend Scan
-          command: |
-            docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-frontend:latest
-
-      - run:
-          name: Push Frontend Docker Image
-          command: |
-            docker push gaffar08/todo-frontend:latest
+            docker push gaffar08/todo-frontend
 
 workflows:
   version: 2
-
-  build-and-push:
+  build:
     jobs:
-      - owasp-scan
-
-      - backend-build-and-push:
-          requires:
-            - owasp-scan
-
-      - frontend-build-and-push:
-          requires:
-            - owasp-scan
+      - frontend-build-and-push
