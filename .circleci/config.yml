@@ -9,6 +9,12 @@ jobs:
       - checkout
 
       - run:
+          name: Install Backend Dependencies
+          command: |
+            cd backend
+            npm install
+
+      - run:
           name: DockerHub Login
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -47,11 +53,18 @@ jobs:
             docker push gaffar08/todo-backend:latest
 
 
+
   frontend-build-and-push:
     machine: true
 
     steps:
       - checkout
+
+      - run:
+          name: Install Frontend Dependencies
+          command: |
+            cd frontend
+            npm install
 
       - run:
           name: DockerHub Login
@@ -90,6 +103,7 @@ jobs:
           name: Push Frontend Docker Image
           command: |
             docker push gaffar08/todo-frontend:latest
+
 
 
 workflows:
