@@ -192,7 +192,7 @@ resource "aws_eks_node_group" "node_group" {
     min_size     = 2
   }
 
-  instance_types = ["t3.small"]
+  instance_types = ["t3.medium"]
 
   capacity_type = "ON_DEMAND"
 

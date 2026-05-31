@@ -4,9 +4,10 @@ kind: ServiceMonitor
 metadata:
   name: backend-servicemonitor
   namespace: monitoring
+  labels:
+    release: monitoring-stack
 
 spec:
-
   selector:
     matchLabels:
       app: backend
@@ -16,6 +17,6 @@ spec:
       - todo-app
 
   endpoints:
-  - port: http
-    path: /metrics
-    interval: 15s
+    - port: http
+      path: /metrics
+      interval: 15s
