@@ -24,7 +24,7 @@ spec:
 
       - name: frontend
 
-        image: gaffar08/todo-frontend:v2
+        image: gaffar08/todo-frontend:1
 
         imagePullPolicy: Always
 

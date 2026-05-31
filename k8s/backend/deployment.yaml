@@ -24,7 +24,7 @@ spec:
 
       - name: backend
 
-        image: gaffar08/todo-backend:v1
+        image: gaffar08/todo-backend:1
 
         imagePullPolicy: Always
 
