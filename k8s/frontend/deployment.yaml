@@ -13,48 +13,26 @@ spec:
       app: frontend
 
   template:
-
     metadata:
       labels:
         app: frontend
 
     spec:
-
       containers:
+        - name: frontend
 
-      - name: frontend
+          image: gaffar08/todo-frontend:latest
 
-        image: gaffar08/todo-frontend:1
+          imagePullPolicy: Always
 
-        imagePullPolicy: Always
+          ports:
+            - containerPort: 80
 
-        ports:
-        - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
 
-
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-
-        livenessProbe:
-
-          httpGet:
-            path: /
-            port: 80
-
-          initialDelaySeconds: 15
-          periodSeconds: 10
-
-        readinessProbe:
-
-          httpGet:
-            path: /
-            port: 80
-
-          initialDelaySeconds: 5
-          periodSeconds: 5
+            limits:
+              memory: "256Mi"
+              cpu: "200m"

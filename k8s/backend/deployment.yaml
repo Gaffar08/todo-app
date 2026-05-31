@@ -13,55 +13,49 @@ spec:
       app: backend
 
   template:
-
     metadata:
       labels:
         app: backend
 
     spec:
-
       containers:
+        - name: backend
 
-      - name: backend
+          image: gaffar08/todo-backend:latest
 
-        image: gaffar08/todo-backend:39
+          imagePullPolicy: Always
 
-        imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
 
-        ports:
-        - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: backend-config
 
-        envFrom:
+            - secretRef:
+                name: backend-secret
 
-        - configMapRef:
-            name: backend-config
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
 
-        - secretRef:
-            name: backend-secret
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
 
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
 
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
+            initialDelaySeconds: 15
+            periodSeconds: 10
 
-        livenessProbe:
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
 
-          httpGet:
-            path: /health
-            port: 5000
-
-          initialDelaySeconds: 15
-          periodSeconds: 10
-
-        readinessProbe:
-
-          httpGet:
-            path: /health
-            port: 5000
-
-          initialDelaySeconds: 5
-          periodSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -37,49 +37,24 @@ jobs:
           path: backend-report
 
       - run:
-          name: Build Backend Image
+          name: Build Backend Docker Image
           command: |
             docker build \
-            -t gaffar08/todo-backend:${CIRCLE_BUILD_NUM} \
+            -t gaffar08/todo-backend:latest \
             ./backend
 
       - run:
           name: Trivy Backend Scan
           command: |
             docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-backend:${CIRCLE_BUILD_NUM}
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image \
+              gaffar08/todo-backend:latest
 
       - run:
-          name: Push Backend Image
+          name: Push Backend Docker Image
           command: |
-            docker push gaffar08/todo-backend:${CIRCLE_BUILD_NUM}
-
-      - run:
-          name: Update Backend Manifest
-          command: |
-            sed -i "s|image: gaffar08/todo-backend:.*|image: gaffar08/todo-backend:${CIRCLE_BUILD_NUM}|g" \
-            k8s/backend/deployment.yaml
-
-      - run:
-          name: Commit Backend Manifest
-          command: |
-            git config user.email "circleci@local"
-            git config user.name "CircleCI"
-
-            git add k8s/backend/deployment.yaml
-
-            git commit -m "Update backend image ${CIRCLE_BUILD_NUM}" || true
-
-      - run:
-          name: Push Manifest Changes
-          command: |
-            git remote set-url origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Gaffar08/todo-app.git
-
-            git push origin main
-
-
+            docker push gaffar08/todo-backend:latest
 
   frontend-build-and-push:
     machine: true
@@ -116,49 +91,24 @@ jobs:
           path: frontend-report
 
       - run:
-          name: Build Frontend Image
+          name: Build Frontend Docker Image
           command: |
             docker build \
-            -t gaffar08/todo-frontend:${CIRCLE_BUILD_NUM} \
+            -t gaffar08/todo-frontend:latest \
             ./frontend
 
       - run:
           name: Trivy Frontend Scan
           command: |
             docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy image \
-            gaffar08/todo-frontend:${CIRCLE_BUILD_NUM}
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image \
+              gaffar08/todo-frontend:latest
 
       - run:
-          name: Push Frontend Image
+          name: Push Frontend Docker Image
           command: |
-            docker push gaffar08/todo-frontend:${CIRCLE_BUILD_NUM}
-
-      - run:
-          name: Update Frontend Manifest
-          command: |
-            sed -i "s|image: gaffar08/todo-frontend:.*|image: gaffar08/todo-frontend:${CIRCLE_BUILD_NUM}|g" \
-            k8s/frontend/deployment.yaml
-
-      - run:
-          name: Commit Frontend Manifest
-          command: |
-            git config user.email "circleci@local"
-            git config user.name "CircleCI"
-
-            git add k8s/frontend/deployment.yaml
-
-            git commit -m "Update frontend image ${CIRCLE_BUILD_NUM}" || true
-
-      - run:
-          name: Push Manifest Changes
-          command: |
-            git remote set-url origin https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/Gaffar08/todo-app.git
-
-            git push origin main
-
-
+            docker push gaffar08/todo-frontend:latest
 
 workflows:
   version: 2
