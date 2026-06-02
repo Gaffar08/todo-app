@@ -11,7 +11,7 @@ spec:
   route:
     receiver: gmail
     matchers:
-      - name: namespace
+      - name: team
         value: todo-app
 
   receivers:
