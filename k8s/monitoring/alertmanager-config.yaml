@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1beta1
+kind: AlertmanagerConfig
+
+metadata:
+  name: todo-app-email
+  namespace: monitoring
+
+  labels:
+    release: monitoring-stack
+
+spec:
+
+  route:
+    receiver: gmail
+
+  receivers:
+  - name: gmail
+
+    emailConfigs:
+    - to: gaffarkhan2879@gmail.com
+
+      from: gaffarkhan2879@gmail.com
+
+      smarthost: smtp.gmail.com:587
+
+      authUsername: gaffarkhan2879@gmail.com
+
+      authPassword:
+        name: gmail-smtp-secret
+        key: password
+
+      requireTLS: true

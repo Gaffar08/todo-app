@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: todo-app-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring-stack
+
+spec:
+  groups:
+  - name: todo-app.rules
+
+    rules:
+
+    - alert: BackendDown
+      expr: up{service="backend-service"} == 0
+      for: 1m
+
+      labels:
+        severity: critical
+
+      annotations:
+        summary: Backend Service Down
+        description: Backend service has been unavailable for more than 1 minute.
