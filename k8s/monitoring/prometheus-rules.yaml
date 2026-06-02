@@ -2,19 +2,29 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: todo-app-alerts
-  namespace: monitoring
+  namespace: todo-app
   labels:
-    release: monitoring-stack
+    release: monitoring-stack   # ← MUST match ruleSelector matchLabels
 spec:
   groups:
-  - name: todo-app.rules
-    rules:
-    - alert: BackendDeploymentDown
-      expr: kube_deployment_status_replicas_available{deployment="backend",namespace="todo-app"} < 1
-      for: 1m
-      labels:
-        severity: critical
-        team: todo-app
-      annotations:
-        summary: Backend Deployment Down
-        description: No backend replicas are available.
+    - name: todo-app.rules
+      rules:
+        - alert: TodoAppDown
+          expr: up{namespace="todo-app"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: todo-app        # ← custom label for alertmanager routing
+          annotations:
+            summary: "Todo app is down"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is down."
+
+        - alert: TodoAppHighMemory
+          expr: container_memory_usage_bytes{namespace="todo-app"} > 200000000
+          for: 2m
+          labels:
+            severity: warning
+            team: todo-app        # ← custom label for alertmanager routing
+          annotations:
+            summary: "Todo app high memory usage"
+            description: "Pod {{ $labels.pod }} memory usage is above 200MB."
