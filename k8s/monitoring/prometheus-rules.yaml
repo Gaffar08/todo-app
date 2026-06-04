@@ -19,7 +19,7 @@ spec:
       labels:
         severity: critical
         team: todo-app
-
+        namespace: monitoring
       annotations:
         summary: "Backend Deployment Down"
         description: "No backend replicas are available."
@@ -31,7 +31,7 @@ spec:
       labels:
         severity: critical
         team: todo-app
-
+        namespace: monitoring
       annotations:
         summary: "Frontend Deployment Down"
         description: "No frontend replicas are available."
