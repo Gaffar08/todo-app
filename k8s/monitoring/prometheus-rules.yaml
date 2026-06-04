@@ -9,34 +9,29 @@ metadata:
 
 spec:
   groups:
-    - name: todo-app.rules
-      rules:
-        - alert: BackendDeploymentDown
-          expr: kube_deployment_status_replicas_available{deployment="backend",namespace="todo-app"} < 1
-          for: 1m
-          labels:
-            severity: critical
-            team: todo-app
-          annotations:
-            summary: "Backend Deployment Down"
-            description: "No backend replicas are available."
+  - name: todo-app.rules
+    rules:
 
-        - alert: FrontendDeploymentDown
-          expr: kube_deployment_status_replicas_available{deployment="frontend",namespace="todo-app"} < 1
-          for: 1m
-          labels:
-            severity: critical
-            team: todo-app
-          annotations:
-            summary: "Frontend Deployment Down"
-            description: "No frontend replicas are available."
+    - alert: BackendDeploymentDown
+      expr: kube_deployment_status_replicas_available{deployment="backend",namespace="todo-app"} < 1
+      for: 1m
 
-        - alert: HighMemoryUsage
-          expr: container_memory_usage_bytes{namespace="todo-app"} > 200000000
-          for: 2m
-          labels:
-            severity: warning
-            team: todo-app
-          annotations:
-            summary: "High Memory Usage"
-            description: "Container memory usage is above 200MB."
+      labels:
+        severity: critical
+        team: todo-app
+
+      annotations:
+        summary: "Backend Deployment Down"
+        description: "No backend replicas are available."
+
+    - alert: FrontendDeploymentDown
+      expr: kube_deployment_status_replicas_available{deployment="frontend",namespace="todo-app"} < 1
+      for: 1m
+
+      labels:
+        severity: critical
+        team: todo-app
+
+      annotations:
+        summary: "Frontend Deployment Down"
+        description: "No frontend replicas are available."

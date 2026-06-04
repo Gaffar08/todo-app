@@ -10,10 +10,7 @@ metadata:
 spec:
   route:
     receiver: gmail
-    groupBy: ['alertname']
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 4h
+
     matchers:
       - name: team
         value: todo-app
@@ -24,8 +21,11 @@ spec:
         - to: gaffarkhan2879@gmail.com
           from: gaffarkhan2879@gmail.com
           smarthost: smtp.gmail.com:587
+
           authUsername: gaffarkhan2879@gmail.com
+
           authPassword:
             name: gmail-smtp-secret
             key: password
+
           requireTLS: true
