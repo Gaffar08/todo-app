@@ -2,23 +2,30 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 
 metadata:
-name: todo-app-email
-namespace: todo-app
-labels:
-release: monitoring-stack
+  name: todo-app-email
+  namespace: monitoring
+  labels:
+    release: monitoring-stack
 
 spec:
-route:
-receiver: gmail
+  route:
+    receiver: gmail
+    groupBy: ['alertname']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: team
+        value: todo-app
 
-receivers:
-- name: gmail
-emailConfigs:
-- to: gaffarkhan2879@gmail.com
-from: gaffarkhan2879@gmail.com
-smarthost: smtp.gmail.com:587
-authUsername: gaffarkhan2879@gmail.com
-authPassword:
-name: gmail-smtp-secret
-key: password
-requireTLS: true
+  receivers:
+    - name: gmail
+      emailConfigs:
+        - to: gaffarkhan2879@gmail.com
+          from: gaffarkhan2879@gmail.com
+          smarthost: smtp.gmail.com:587
+          authUsername: gaffarkhan2879@gmail.com
+          authPassword:
+            name: gmail-smtp-secret
+            key: password
+          requireTLS: true
