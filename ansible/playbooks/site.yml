@@ -1,0 +1,9 @@
+---
+- import_playbook: playbooks/install-awscli.yml
+- import_playbook: playbooks/install-kubectl.yml
+- import_playbook: playbooks/install-helm.yml
+- import_playbook: playbooks/configure-eks.yml
+- import_playbook: playbooks/install-monitoring.yml
+- import_playbook: playbooks/install-argocd.yml
+- import_playbook: playbooks/deploy-monitoring-config.yml
+- import_playbook: playbooks/verify-cluster.yml

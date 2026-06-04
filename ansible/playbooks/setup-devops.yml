@@ -1,0 +1,10 @@
+---
+- name: Setup DevOps Environment
+  hosts: local
+  become: yes
+
+  roles:
+    - docker
+    - kubectl
+    - helm
+    - terraform
