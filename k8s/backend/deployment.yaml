@@ -23,7 +23,7 @@ spec:
 
           image: gaffar08/todo-backend:latest
 
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
 
           ports:
             - containerPort: 5000
@@ -48,7 +48,6 @@ spec:
             httpGet:
               path: /health
               port: 5000
-
             initialDelaySeconds: 15
             periodSeconds: 10
 
@@ -56,6 +55,5 @@ spec:
             httpGet:
               path: /health
               port: 5000
-
             initialDelaySeconds: 5
             periodSeconds: 5

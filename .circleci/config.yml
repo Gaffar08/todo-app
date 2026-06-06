@@ -1,12 +1,19 @@
 version: 2.1
 
 jobs:
-
   backend-build-and-push:
     machine: true
-
     steps:
       - checkout
+
+      - run:
+          name: Skip if CI Bot Commit
+          command: |
+            COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+            if echo "$COMMIT_AUTHOR" | grep -q "CircleCI Bot"; then
+              echo "Commit is from CircleCI Bot — skipping pipeline"
+              circleci step halt
+            fi
 
       - run:
           name: Install Backend Dependencies
@@ -23,7 +30,6 @@ jobs:
           name: OWASP Dependency Check Backend
           command: |
             mkdir -p backend-report
-
             docker run --rm \
               -e NVD_API_KEY=${NVD_API_KEY} \
               -v $(pwd):/src \
@@ -40,7 +46,7 @@ jobs:
           name: Build Backend Docker Image
           command: |
             docker build \
-            -t gaffar08/todo-backend:latest \
+            -t gaffar08/todo-backend:$CIRCLE_BUILD_NUM \
             ./backend
 
       - run:
@@ -49,18 +55,37 @@ jobs:
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
               aquasec/trivy image \
-              gaffar08/todo-backend:latest
+              gaffar08/todo-backend:$CIRCLE_BUILD_NUM
 
       - run:
           name: Push Backend Docker Image
           command: |
-            docker push gaffar08/todo-backend:latest
+            docker push gaffar08/todo-backend:$CIRCLE_BUILD_NUM
+
+      - run:
+          name: Update Backend Manifest in Git
+          command: |
+            git config user.email "circleci@bot.com"
+            git config user.name "CircleCI Bot"
+            sed -i "s|gaffar08/todo-backend:.*|gaffar08/todo-backend:$CIRCLE_BUILD_NUM|" \
+              k8s/backend-deployment.yaml
+            git add k8s/backend-deployment.yaml
+            git commit -m "ci: update backend image to $CIRCLE_BUILD_NUM [ci skip]"
+            git push origin main
 
   frontend-build-and-push:
     machine: true
-
     steps:
       - checkout
+
+      - run:
+          name: Skip if CI Bot Commit
+          command: |
+            COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+            if echo "$COMMIT_AUTHOR" | grep -q "CircleCI Bot"; then
+              echo "Commit is from CircleCI Bot — skipping pipeline"
+              circleci step halt
+            fi
 
       - run:
           name: Install Frontend Dependencies
@@ -77,7 +102,6 @@ jobs:
           name: OWASP Dependency Check Frontend
           command: |
             mkdir -p frontend-report
-
             docker run --rm \
               -e NVD_API_KEY=${NVD_API_KEY} \
               -v $(pwd):/src \
@@ -94,7 +118,7 @@ jobs:
           name: Build Frontend Docker Image
           command: |
             docker build \
-            -t gaffar08/todo-frontend:latest \
+            -t gaffar08/todo-frontend:$CIRCLE_BUILD_NUM \
             ./frontend
 
       - run:
@@ -103,16 +127,26 @@ jobs:
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
               aquasec/trivy image \
-              gaffar08/todo-frontend:latest
+              gaffar08/todo-frontend:$CIRCLE_BUILD_NUM
 
       - run:
           name: Push Frontend Docker Image
           command: |
-            docker push gaffar08/todo-frontend:latest
+            docker push gaffar08/todo-frontend:$CIRCLE_BUILD_NUM
+
+      - run:
+          name: Update Frontend Manifest in Git
+          command: |
+            git config user.email "circleci@bot.com"
+            git config user.name "CircleCI Bot"
+            sed -i "s|gaffar08/todo-frontend:.*|gaffar08/todo-frontend:$CIRCLE_BUILD_NUM|" \
+              k8s/frontend-deployment.yaml
+            git add k8s/frontend-deployment.yaml
+            git commit -m "ci: update frontend image to $CIRCLE_BUILD_NUM [ci skip]"
+            git push origin main
 
 workflows:
   version: 2
-
   build-and-push:
     jobs:
       - backend-build-and-push
