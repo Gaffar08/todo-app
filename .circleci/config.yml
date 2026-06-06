@@ -71,7 +71,7 @@ jobs:
               k8s/backend/deployment.yaml
             git add k8s/backend/deployment.yaml
             git commit -m "ci: update backend image to $CIRCLE_BUILD_NUM [ci skip]"
-            git push origin main
+            git push https://$GITHUB_TOKEN@github.com/Gaffar08/todo-app.git main
 
   frontend-build-and-push:
     machine: true
@@ -143,7 +143,7 @@ jobs:
               k8s/frontend/deployment.yaml
             git add k8s/frontend/deployment.yaml
             git commit -m "ci: update frontend image to $CIRCLE_BUILD_NUM [ci skip]"
-            git push origin main
+            git push https://$GITHUB_TOKEN@github.com/Gaffar08/todo-app.git main
 
 workflows:
   version: 2
