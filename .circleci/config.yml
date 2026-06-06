@@ -68,8 +68,8 @@ jobs:
             git config user.email "circleci@bot.com"
             git config user.name "CircleCI Bot"
             sed -i "s|gaffar08/todo-backend:.*|gaffar08/todo-backend:$CIRCLE_BUILD_NUM|" \
-              k8s/backend-deployment.yaml
-            git add k8s/backend-deployment.yaml
+              k8s/backend/backend-deployment.yaml
+            git add k8s/backend/backend-deployment.yaml
             git commit -m "ci: update backend image to $CIRCLE_BUILD_NUM [ci skip]"
             git push origin main
 
@@ -140,8 +140,8 @@ jobs:
             git config user.email "circleci@bot.com"
             git config user.name "CircleCI Bot"
             sed -i "s|gaffar08/todo-frontend:.*|gaffar08/todo-frontend:$CIRCLE_BUILD_NUM|" \
-              k8s/frontend-deployment.yaml
-            git add k8s/frontend-deployment.yaml
+              k8s/frontend/frontend-deployment.yaml
+            git add k8s/frontend/frontend-deployment.yaml
             git commit -m "ci: update frontend image to $CIRCLE_BUILD_NUM [ci skip]"
             git push origin main
 
