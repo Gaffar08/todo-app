@@ -21,7 +21,7 @@ spec:
       containers:
         - name: backend
 
-          image: gaffar08/todo-backend:latest
+          image: gaffar08/todo-backend:96
 
           imagePullPolicy: IfNotPresent
 
