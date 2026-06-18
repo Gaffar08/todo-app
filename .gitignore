@@ -1,0 +1,10 @@
+.env
+*.env
+node_modules/
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+secret.yaml
+.terraform.lock.hcl
+terraform.tfvars
+terraform/terraform.tfvars

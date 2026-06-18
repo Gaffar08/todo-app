@@ -1,0 +1,301 @@
+version: 2.1
+
+parameters:
+  backend:
+    type: boolean
+    default: false
+
+  frontend:
+    type: boolean
+    default: false
+
+jobs:
+
+  backend-build:
+    machine: true
+    environment:
+      IMAGE_NAME: gaffar08/todo-backend
+
+    steps:
+      - checkout
+
+      - run:
+          name: Set Version
+          command: |
+            SHORT_SHA=$(echo $CIRCLE_SHA1 | cut -c1-7)
+            echo "export VERSION=v1.0.${CIRCLE_BUILD_NUM}-${SHORT_SHA}" >> $BASH_ENV
+
+      - run:
+          name: Load Version
+          command: |
+            source $BASH_ENV
+            echo "VERSION=${VERSION}"
+
+      - run:
+          name: SonarQube Backend Scan
+          command: |
+            if [ "$RUN_SONAR" = "false" ]; then
+              echo "Skipping SonarQube Scan"
+              exit 0
+            fi
+
+            docker run --rm \
+              -e SONAR_HOST_URL=$SONAR_HOST_URL \
+              -e SONAR_TOKEN=$SONAR_TOKEN \
+              -v $(pwd)/backend:/usr/src \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=todo-backend \
+              -Dsonar.sources=/usr/src \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.token=$SONAR_TOKEN || true
+
+      - run:
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login \
+            -u "$DOCKER_USERNAME" \
+            --password-stdin
+
+      - run:
+          name: Create OWASP Report Directory
+          command: |
+            mkdir -p backend-report
+
+      - run:
+          name: OWASP Backend Scan
+          no_output_timeout: 30m
+          command: |
+            if [ "$RUN_OWASP" = "false" ]; then
+              echo "Skipping OWASP Scan"
+              exit 0
+            fi
+
+            docker run --rm \
+              -e NVD_API_KEY=${NVD_API_KEY} \
+              -v $(pwd):/src \
+              owasp/dependency-check:latest \
+              --nvdApiKey ${NVD_API_KEY} \
+              --scan /src/backend \
+              --format JSON \
+              --out /src/backend-report || true
+
+      - store_artifacts:
+          path: backend-report
+
+      - run:
+          name: Build Backend Image
+          command: |
+            source $BASH_ENV
+
+            docker build \
+              -t ${IMAGE_NAME}:${VERSION} \
+              ./backend
+
+      - restore_cache:
+          keys:
+            - trivy-db-v1
+
+      - run:
+          name: Trivy Backend Scan
+          command: |
+            source $BASH_ENV
+
+            mkdir -p .trivycache
+
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd)/.trivycache:/root/.cache \
+              aquasec/trivy image \
+              --severity CRITICAL \
+              --exit-code 1 \
+              ${IMAGE_NAME}:${VERSION}
+
+      - save_cache:
+          key: trivy-db-v1
+          paths:
+            - .trivycache
+
+      - run:
+          name: Push Backend Image
+          command: |
+            source $BASH_ENV
+
+            docker push ${IMAGE_NAME}:${VERSION}
+
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:65qhB9G/c+r/YKGcJe+P59eB+sOl4vt4XKgfcjoukTM"
+
+      - run:
+          name: Update GitOps Repo
+          command: |
+            source $BASH_ENV
+
+            git clone --depth 1 git@github.com:Gaffar08/todo-gitops.git
+
+            cd todo-gitops
+
+            sed -i \
+              "s|image: gaffar08/todo-backend:.*|image: gaffar08/todo-backend:${VERSION}|g" \
+              k8s/backend/deployment.yaml
+
+            git config user.email "circleci@github.com"
+            git config user.name "circleci"
+
+            git add .
+
+            git commit -m "ci: update backend image to ${VERSION}" || true
+
+            git pull --rebase origin main
+
+            git push origin main
+
+  frontend-build:
+    machine: true
+    environment:
+      IMAGE_NAME: gaffar08/todo-frontend
+
+    steps:
+      - checkout
+
+      - run:
+          name: Set Version
+          command: |
+            SHORT_SHA=$(echo $CIRCLE_SHA1 | cut -c1-7)
+            echo "export VERSION=v1.0.${CIRCLE_BUILD_NUM}-${SHORT_SHA}" >> $BASH_ENV
+
+      - run:
+          name: Load Version
+          command: |
+            source $BASH_ENV
+            echo "VERSION=${VERSION}"
+
+      - run:
+          name: SonarQube Frontend Scan
+          command: |
+            if [ "$RUN_SONAR" = "false" ]; then
+              echo "Skipping SonarQube Scan"
+              exit 0
+            fi
+
+            docker run --rm \
+              -e SONAR_HOST_URL=$SONAR_HOST_URL \
+              -e SONAR_TOKEN=$SONAR_TOKEN \
+              -v $(pwd)/frontend:/usr/src \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=todo-frontend \
+              -Dsonar.sources=/usr/src \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.token=$SONAR_TOKEN || true
+
+      - run:
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login \
+            -u "$DOCKER_USERNAME" \
+            --password-stdin
+
+      - run:
+          name: Create OWASP Report Directory
+          command: |
+            mkdir -p frontend-report
+
+      - run:
+          name: OWASP Frontend Scan
+          no_output_timeout: 30m
+          command: |
+            if [ "$RUN_OWASP" = "false" ]; then
+              echo "Skipping OWASP Scan"
+              exit 0
+            fi
+
+            docker run --rm \
+              -e NVD_API_KEY=${NVD_API_KEY} \
+              -v $(pwd):/src \
+              owasp/dependency-check:latest \
+              --nvdApiKey ${NVD_API_KEY} \
+              --scan /src/frontend \
+              --format JSON \
+              --out /src/frontend-report || true
+
+      - store_artifacts:
+          path: frontend-report
+
+      - run:
+          name: Build Frontend Image
+          command: |
+            source $BASH_ENV
+
+            docker build \
+              -t ${IMAGE_NAME}:${VERSION} \
+              ./frontend
+
+      - restore_cache:
+          keys:
+            - trivy-db-v1
+
+      - run:
+          name: Trivy Frontend Scan
+          command: |
+            source $BASH_ENV
+
+            mkdir -p .trivycache
+
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd)/.trivycache:/root/.cache \
+              aquasec/trivy image \
+              --severity CRITICAL \
+              --exit-code 1 \
+              ${IMAGE_NAME}:${VERSION}
+
+      - save_cache:
+          key: trivy-db-v1
+          paths:
+            - .trivycache
+
+      - run:
+          name: Push Frontend Image
+          command: |
+            source $BASH_ENV
+
+            docker push ${IMAGE_NAME}:${VERSION}
+
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:65qhB9G/c+r/YKGcJe+P59eB+sOl4vt4XKgfcjoukTM"
+
+      - run:
+          name: Update GitOps Repo
+          command: |
+            source $BASH_ENV
+
+            git clone --depth 1 git@github.com:Gaffar08/todo-gitops.git
+
+            cd todo-gitops
+
+            sed -i \
+              "s|image: gaffar08/todo-frontend:.*|image: gaffar08/todo-frontend:${VERSION}|g" \
+              k8s/frontend/deployment.yaml
+
+            git config user.email "circleci@github.com"
+            git config user.name "circleci"
+
+            git add .
+
+            git commit -m "ci: update frontend image to ${VERSION}" || true
+
+            git pull --rebase origin main
+
+            git push origin main
+
+workflows:
+  backend-workflow:
+    when: << pipeline.parameters.backend >>
+    jobs:
+      - backend-build
+
+  frontend-workflow:
+    when: << pipeline.parameters.frontend >>
+    jobs:
+      - frontend-build

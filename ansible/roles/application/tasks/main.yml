@@ -1,0 +1,4 @@
+---
+- name: Deploy ArgoCD Application
+  shell: |
+    kubectl apply -f {{ role_path }}/files/application.yaml

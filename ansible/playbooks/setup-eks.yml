@@ -1,0 +1,13 @@
+---
+- name: Configure EKS Cluster
+  hosts: local
+  gather_facts: false
+
+  roles:
+    - kubeconfig
+    - metrics-server
+    - ingress-nginx
+    - monitoring
+    - logging
+    - argocd
+    - application

@@ -1,0 +1,19 @@
+---
+- name: Add Grafana Helm Repository
+  shell: |
+    helm repo add grafana https://grafana.github.io/helm-charts
+
+- name: Update Helm Repositories
+  shell: |
+    helm repo update
+
+- name: Create Logging Namespace
+  shell: |
+    kubectl create namespace logging \
+      --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Install Loki Stack
+  shell: |
+    helm upgrade --install loki-stack \
+      grafana/loki-stack \
+      -n logging

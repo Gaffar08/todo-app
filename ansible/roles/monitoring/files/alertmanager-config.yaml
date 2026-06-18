@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+
+metadata:
+  name: email-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring-stack
+
+spec:
+  route:
+    receiver: email-notifications
+    groupBy:
+      - alertname
+      - namespace
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+
+  receivers:
+    - name: email-notifications
+
+      emailConfigs:
+        - to: "gaffarkhan2879@gmail.com"
+          from: "gaffarkhan2879@gmail.com"
+
+          smarthost: "smtp.gmail.com:587"
+
+          authUsername: "gaffarkhan2879@gmail.com"
+
+          authPassword:
+            name: alertmanager-gmail-secret
+            key: app-password
+
+          requireTLS: true
+          sendResolved: true
+
+          html: |
+            <h3>{{ .Status | toUpper }}</h3>
+            <b>Alert:</b> {{ .CommonAnnotations.summary }}<br/>
+            <b>Description:</b> {{ .CommonAnnotations.description }}<br/>
+            <b>Namespace:</b> {{ .CommonLabels.namespace }}<br/>
+            <b>Severity:</b> {{ .CommonLabels.severity }}<br/>

@@ -1,0 +1,54 @@
+---
+- name: Add Prometheus Repo
+  shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+- name: Update Helm Repo
+  shell: helm repo update
+
+- name: Install Monitoring Stack
+  shell: |
+    helm upgrade --install monitoring-stack \
+    prometheus-community/kube-prometheus-stack \
+    -n monitoring \
+    --create-namespace \
+    -f {{ role_path }}/files/values.yaml \
+    --set grafana.adminPassword="{{ grafana_admin_password }}"
+
+- name: Wait for Prometheus to be ready
+  shell: |
+    kubectl wait --for=condition=available \
+      deployment/monitoring-stack-grafana \
+      -n monitoring \
+      --timeout=300s
+
+- name: Expose Grafana
+  shell: |
+    kubectl patch svc monitoring-stack-grafana \
+      -n monitoring \
+      -p '{"spec":{"type":"LoadBalancer"}}'
+
+- name: Expose Prometheus
+  shell: |
+    kubectl patch svc monitoring-stack-kube-prom-prometheus \
+      -n monitoring \
+      -p '{"spec":{"type":"LoadBalancer"}}'
+
+- name: Expose Alertmanager
+  shell: |
+    kubectl patch svc monitoring-stack-kube-prom-alertmanager \
+      -n monitoring \
+      -p '{"spec":{"type":"LoadBalancer"}}'
+
+- name: Apply Alert Rules
+  shell: kubectl apply -f {{ role_path }}/files/alert-rules.yaml
+
+- name: Apply Alertmanager Config
+  shell: kubectl apply -f {{ role_path }}/files/alertmanager-config.yaml
+
+- name: Create Gmail app password secret
+  shell: |
+    kubectl create secret generic alertmanager-gmail-secret \
+      -n monitoring \
+      --from-literal=app-password="{{ gmail_app_password }}" \
+      --dry-run=client -o yaml | kubectl apply -f -
+

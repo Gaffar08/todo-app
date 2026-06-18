@@ -1,0 +1,6 @@
+---
+- name: Configure kubeconfig for EKS
+  shell: |
+    aws eks update-kubeconfig \
+      --region ap-south-1 \
+      --name todo-eks-cluster
