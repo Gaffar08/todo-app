@@ -210,30 +210,3 @@ resource "aws_eks_node_group" "node_group" {
   }
 }
 
-# -----------------------------
-# CONFIGURE KUBECONFIG + RUN ANSIBLE
-# -----------------------------
-resource "null_resource" "configure_eks" {
-  depends_on = [aws_eks_node_group.node_group]
-
-  triggers = {
-    cluster_name = aws_eks_cluster.eks.name
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["C:/Program Files/Git/usr/bin/bash.exe", "-c"]
-
-    environment = {
-      GMAIL_APP_PASSWORD        = var.gmail_app_password
-      GRAFANA_ADMIN_PASSWORD    = var.grafana_admin_password
-      AWS_ACCESS_KEY_ID_APP     = var.app_aws_access_key_id
-      AWS_SECRET_ACCESS_KEY_APP = var.app_aws_secret_access_key
-    }
-
-    command = <<EOT
-      aws eks update-kubeconfig --region ${var.aws_region} --name ${var.cluster_name}
-      cd ../ansible
-      ansible-playbook playbooks/setup-eks.yml --extra-vars "gmail_app_password=$GMAIL_APP_PASSWORD grafana_admin_password=$GRAFANA_ADMIN_PASSWORD aws_access_key_id=$AWS_ACCESS_KEY_ID_APP aws_secret_access_key=$AWS_SECRET_ACCESS_KEY_APP"
-    EOT
-  }
-}
