@@ -141,7 +141,7 @@ function App() {
           <Card className="shadow p-4">
 
             <h1 className="text-center mb-2">
-              Devops Todo Platform.
+              Todo Platform.
             </h1>
 
             <p className="text-center text-muted">
